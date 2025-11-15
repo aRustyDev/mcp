@@ -1,0 +1,17 @@
+# Summary
+
+- [Model Context Protocol](./protocol/README.md)
+- [MCP Servers](./servers/README.md)
+  - [Security Considerations](./servers/README.md)
+  - [Patterns](./servers/patterns.md)
+  - [Anti-Patterns](./servers/anti-patterns.md)
+  - [Design Context](./servers/design-context.md)
+  - [SDK](./servers/sdk.md)
+- [MCP Clients](./clients/README.md)
+  - [Security Considerations](./clients/README.md)
+  - [Patterns](./clients/patterns.md)
+  - [Anti-Patterns](./clients/anti-patterns.md)
+  - [Design Context](./clients/design-context.md)
+  - [SDK](./clients/sdk.md)
+- [MCP Tools](./tools/README.md)
+  - [Gaps](./tools/gaps/README.md)
