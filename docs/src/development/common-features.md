@@ -25,7 +25,7 @@
 - Markdown badges
   - ![Claude](https://img.shields.io/badge/Claude-D97757?style=for-the-badge&logo=claude&logoColor=white)
   - ![aRustyDev](https://img.arusty.dev/badge/arustydev?style=for-the-badge&logo=<fooBar>&logoColor=white)
-  - markbadge
+  - [markbadge](https://markbadge.com/static)
     - transport support status (R/Y/G) (Stdio/SSE/HTTP)
     - healthcheck support status (R/Y/G) (None/Some/Complete)
     - container support status (R/Y/G) (None/Dockerfile/PublishedContainer)
