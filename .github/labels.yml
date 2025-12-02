@@ -1,0 +1,166 @@
+# =============================================================================
+# MCP Server Tracking - GitHub Labels
+# =============================================================================
+# Sync with: EndBug/label-sync@v2
+# =============================================================================
+
+# =============================================================================
+# Type Labels (prefix: type/)
+# =============================================================================
+- name: "type/research"
+  color: "0052CC"
+  description: "Research and exploration tasks"
+
+- name: "type/analysis"
+  color: "1D76DB"
+  description: "Comparative analysis work"
+
+- name: "type/implementation"
+  color: "0E8A16"
+  description: "Code implementation work"
+
+- name: "type/documentation"
+  color: "C5DEF5"
+  description: "Documentation tasks"
+
+- name: "type/rewrite"
+  color: "5319E7"
+  description: "Rust rewrite tasks"
+
+- name: "type/docker"
+  color: "2496ED"
+  description: "Docker/container work"
+
+- name: "type/ci-cd"
+  color: "FBCA04"
+  description: "CI/CD pipeline work"
+
+# =============================================================================
+# Phase Labels (prefix: phase/)
+# =============================================================================
+- name: "phase/discovery"
+  color: "D4C5F9"
+  description: "Identifying and cataloging servers"
+
+- name: "phase/planning"
+  color: "C2E0C6"
+  description: "Planning and design phase"
+
+- name: "phase/development"
+  color: "BFD4F2"
+  description: "Active development"
+
+- name: "phase/review"
+  color: "FEF2C0"
+  description: "Code review or analysis review"
+
+- name: "phase/blocked"
+  color: "D93F0B"
+  description: "Blocked by external dependency"
+
+# =============================================================================
+# Transport Labels (prefix: transport/)
+# =============================================================================
+- name: "transport/stdio"
+  color: "EDEDED"
+  description: "stdio transport only"
+
+- name: "transport/http-sse"
+  color: "0E8A16"
+  description: "Native HTTP/SSE support"
+
+- name: "transport/http-streamed"
+  color: "0E8A16"
+  description: "Native Streamable HTTP support"
+
+- name: "transport/http-wrapped"
+  color: "C2E0C6"
+  description: "HTTP via supergateway wrapper"
+
+- name: "transport/needs-wrapper"
+  color: "FBCA04"
+  description: "Needs HTTP wrapper implementation"
+
+# =============================================================================
+# Category Labels (prefix: category/)
+# =============================================================================
+- name: "category/search"
+  color: "006B75"
+  description: "Search-related MCP servers"
+
+- name: "category/git"
+  color: "F9D0C4"
+  description: "Git/VCS MCP servers"
+
+- name: "category/docs"
+  color: "C5DEF5"
+  description: "Documentation MCP servers"
+
+- name: "category/workflow"
+  color: "FEF2C0"
+  description: "Workflow/automation servers"
+
+- name: "category/reasoning"
+  color: "D4C5F9"
+  description: "Chain-of-thought/reasoning servers"
+
+- name: "category/db"
+  color: "BFD4F2"
+  description: "Database MCP servers"
+
+- name: "category/llm"
+  color: "E99695"
+  description: "LLM-related MCP servers"
+
+# =============================================================================
+# Status Labels (prefix: status/)
+# =============================================================================
+- name: "status/upstream"
+  color: "EDEDED"
+  description: "Depends on upstream changes"
+
+- name: "status/needs-triage"
+  color: "D93F0B"
+  description: "Needs initial assessment"
+
+- name: "status/needs-review"
+  color: "FBCA04"
+  description: "Ready for review"
+
+- name: "status/stale"
+  color: "EDEDED"
+  description: "No activity for 30+ days"
+
+# =============================================================================
+# Priority Labels (prefix: priority/)
+# =============================================================================
+- name: "priority/critical"
+  color: "B60205"
+  description: "Must be addressed immediately"
+
+- name: "priority/high"
+  color: "D93F0B"
+  description: "High priority item"
+
+- name: "priority/medium"
+  color: "FBCA04"
+  description: "Normal priority"
+
+- name: "priority/low"
+  color: "0E8A16"
+  description: "Nice to have"
+
+# =============================================================================
+# Gap Analysis Labels (prefix: gap/)
+# =============================================================================
+- name: "gap/feature"
+  color: "7057FF"
+  description: "Missing feature identified"
+
+- name: "gap/integration"
+  color: "008672"
+  description: "Integration gap identified"
+
+- name: "gap/tooling"
+  color: "E4E669"
+  description: "Tooling gap identified"

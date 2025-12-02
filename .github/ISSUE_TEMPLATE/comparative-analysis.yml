@@ -1,0 +1,49 @@
+name: "Comparative Analysis"
+description: "Compare similar MCP servers"
+title: "[Analysis] "
+labels: ["type/analysis", "phase/planning"]
+body:
+  - type: input
+    id: comparison-title
+    attributes:
+      label: Comparison Title
+      placeholder: "e.g., Chain-of-Thought MCP Servers"
+    validations:
+      required: true
+
+  - type: textarea
+    id: servers-compared
+    attributes:
+      label: Servers Being Compared
+      description: "List servers with links"
+      placeholder: |
+        1. [Server A](url) - Brief description
+        2. [Server B](url) - Brief description
+    validations:
+      required: true
+
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Comparison Criteria
+      description: "What aspects are being compared?"
+      placeholder: |
+        - [ ] Tools/Features
+        - [ ] Transport support
+        - [ ] Docker availability
+        - [ ] Documentation quality
+        - [ ] Maintenance activity
+        - [ ] Token efficiency
+        - [ ] Performance
+
+  - type: textarea
+    id: findings
+    attributes:
+      label: Findings
+      description: "Analysis results (can be updated)"
+
+  - type: textarea
+    id: recommendation
+    attributes:
+      label: Recommendation
+      description: "Which server(s) to prioritize and why"
