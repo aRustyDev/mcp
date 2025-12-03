@@ -15,3 +15,8 @@
   - [SDK](./clients/sdk.md)
 - [MCP Tools](./tools/README.md)
   - [Gaps](./tools/gaps/README.md)
+- [Project Management](./project-management/index.md)
+  - [Labels](./project-management/labels.md)
+  - [Project Fields](./project-management/fields.md)
+  - [Views](./project-management/views.md)
+  - [Issue Strategy](./project-management/issue-strategy.md)

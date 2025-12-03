@@ -1,0 +1,11 @@
+- https://www.mcpevals.io/
+- https://www.mcpevals.ai/
+- https://docs.scorecard.io/intro/overview
+- https://mcp.scorecard.io/mcp
+- https://www.remote-mcp.com/servers/scorecard
+- https://mcpcat.io/guides/writing-unit-tests-mcp-servers/
+- https://obot.ai/resources/learning-center/mcp-servers/
+- https://testomat.io/blog/mcp-server-testing-tools/
+- https://deepwiki.com/modelscope/MCPBench/3.3-metrics-and-results
+- https://github.com/steiza/scorecard-mcp
+- https://dev.to/matt_lenhard_650f4412cb21/mcp-evals-how-to-test-your-mcp-tools-13h1
