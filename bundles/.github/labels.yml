@@ -1,0 +1,376 @@
+# =============================================================================
+# MCP Server Development - GitHub Labels
+# =============================================================================
+# Sync with: EndBug/label-sync@v2
+# Project: https://github.com/users/aRustyDev/projects/22
+# =============================================================================
+
+# =============================================================================
+# Type Labels (prefix: type/)
+# =============================================================================
+- name: "type/research"
+  color: "0052CC"
+  description: "Research and exploration tasks"
+
+- name: "type/analysis"
+  color: "1D76DB"
+  description: "Comparative analysis work"
+
+- name: "type/implementation"
+  color: "0E8A16"
+  description: "Code implementation work"
+
+- name: "type/documentation"
+  color: "C5DEF5"
+  description: "Documentation tasks"
+
+- name: "type/rewrite"
+  color: "5319E7"
+  description: "Rust rewrite tasks"
+
+- name: "type/docker"
+  color: "2496ED"
+  description: "Docker/container work"
+
+- name: "type/ci-cd"
+  color: "FBCA04"
+  description: "CI/CD pipeline work"
+
+# =============================================================================
+# Phase Labels (prefix: phase/)
+# =============================================================================
+- name: "phase/discovery"
+  color: "D4C5F9"
+  description: "Identifying and cataloging servers"
+
+- name: "phase/planning"
+  color: "C2E0C6"
+  description: "Planning and design phase"
+
+- name: "phase/development"
+  color: "BFD4F2"
+  description: "Active development"
+
+- name: "phase/review"
+  color: "FEF2C0"
+  description: "Code review or analysis review"
+
+- name: "phase/blocked"
+  color: "D93F0B"
+  description: "Blocked by external dependency"
+
+- name: "phase/testing"
+  color: "0E8A16"
+  description: "Testing and validation phase"
+
+- name: "phase/complete"
+  color: "238636"
+  description: "Work completed"
+
+# =============================================================================
+# Language Labels (prefix: lang/)
+# =============================================================================
+- name: "lang/python"
+  color: "3572A5"
+  description: "Python implementation"
+
+- name: "lang/typescript"
+  color: "3178C6"
+  description: "TypeScript implementation"
+
+- name: "lang/javascript"
+  color: "F7DF1E"
+  description: "JavaScript implementation"
+
+- name: "lang/go"
+  color: "00ADD8"
+  description: "Go implementation"
+
+- name: "lang/rust"
+  color: "DEA584"
+  description: "Rust implementation"
+
+- name: "lang/java"
+  color: "B07219"
+  description: "Java implementation"
+
+# =============================================================================
+# Transport Labels (prefix: transport/)
+# =============================================================================
+- name: "transport/stdio"
+  color: "EDEDED"
+  description: "stdio transport only"
+
+- name: "transport/http-sse"
+  color: "0E8A16"
+  description: "Native HTTP/SSE support"
+
+- name: "transport/http-streamed"
+  color: "0E8A16"
+  description: "Native Streamable HTTP support"
+
+- name: "transport/http-wrapped"
+  color: "C2E0C6"
+  description: "HTTP via supergateway wrapper"
+
+- name: "transport/needs-wrapper"
+  color: "FBCA04"
+  description: "Needs HTTP wrapper implementation"
+
+- name: "transport/websocket"
+  color: "1D76DB"
+  description: "WebSocket transport support"
+
+# =============================================================================
+# Category Labels (prefix: category/)
+# =============================================================================
+- name: "category/search"
+  color: "006B75"
+  description: "Search-related MCP servers"
+
+- name: "category/git"
+  color: "F9D0C4"
+  description: "Git/VCS MCP servers"
+
+- name: "category/docs"
+  color: "C5DEF5"
+  description: "Documentation MCP servers"
+
+- name: "category/workflow"
+  color: "FEF2C0"
+  description: "Workflow/automation servers"
+
+- name: "category/reasoning"
+  color: "D4C5F9"
+  description: "Chain-of-thought/reasoning servers"
+
+- name: "category/db"
+  color: "BFD4F2"
+  description: "Database MCP servers"
+
+- name: "category/llm"
+  color: "E99695"
+  description: "LLM-related MCP servers"
+
+- name: "category/notes"
+  color: "A2EEEF"
+  description: "Note-taking/knowledge MCP servers"
+
+- name: "category/docker"
+  color: "2496ED"
+  description: "Docker/container MCP servers"
+
+# =============================================================================
+# Docker Phase Labels (prefix: docker/)
+# =============================================================================
+- name: "docker/none"
+  color: "EDEDED"
+  description: "No Docker implementation"
+
+- name: "docker/dockerfile-draft"
+  color: "FEF2C0"
+  description: "Dockerfile in development"
+
+- name: "docker/dockerfile-reviewed"
+  color: "C2E0C6"
+  description: "Dockerfile reviewed and approved"
+
+- name: "docker/image-published"
+  color: "0E8A16"
+  description: "Docker image published to registry"
+
+- name: "docker/hadolint-compliant"
+  color: "238636"
+  description: "Passes HADOLint checks"
+
+# =============================================================================
+# Rust Rewrite Labels (prefix: rust/)
+# =============================================================================
+- name: "rust/not-planned"
+  color: "EDEDED"
+  description: "Rust rewrite not planned"
+
+- name: "rust/researching"
+  color: "D4C5F9"
+  description: "Researching for Rust rewrite"
+
+- name: "rust/planning"
+  color: "C2E0C6"
+  description: "Planning Rust implementation"
+
+- name: "rust/plan-review"
+  color: "FEF2C0"
+  description: "Rust plan under review"
+
+- name: "rust/plan-accepted"
+  color: "0E8A16"
+  description: "Rust plan accepted"
+
+- name: "rust/implementing"
+  color: "1D76DB"
+  description: "Rust implementation in progress"
+
+- name: "rust/testing"
+  color: "0052CC"
+  description: "Rust implementation testing"
+
+- name: "rust/complete"
+  color: "238636"
+  description: "Rust rewrite complete"
+
+# =============================================================================
+# Documentation Labels (prefix: docs/)
+# =============================================================================
+- name: "docs/none"
+  color: "EDEDED"
+  description: "No documentation"
+
+- name: "docs/comments-partial"
+  color: "FEF2C0"
+  description: "Partial code comments"
+
+- name: "docs/comments-complete"
+  color: "C2E0C6"
+  description: "Complete code comments"
+
+- name: "docs/mdbook-draft"
+  color: "1D76DB"
+  description: "MDBook documentation in draft"
+
+- name: "docs/mdbook-complete"
+  color: "0E8A16"
+  description: "MDBook documentation complete"
+
+- name: "docs/llms-txt-ready"
+  color: "238636"
+  description: "llms.txt and llms_full.txt ready"
+
+# =============================================================================
+# CI/CD Labels (prefix: cicd/)
+# =============================================================================
+- name: "cicd/none"
+  color: "EDEDED"
+  description: "No CI/CD pipeline"
+
+- name: "cicd/basic"
+  color: "FEF2C0"
+  description: "Basic CI/CD (lint, format)"
+
+- name: "cicd/testing"
+  color: "C2E0C6"
+  description: "Testing pipeline configured"
+
+- name: "cicd/security"
+  color: "0E8A16"
+  description: "Security scanning configured"
+
+- name: "cicd/full-pipeline"
+  color: "238636"
+  description: "Full CI/CD pipeline"
+
+# =============================================================================
+# Upstream Activity Labels (prefix: upstream/)
+# =============================================================================
+- name: "upstream/active"
+  color: "238636"
+  description: "Upstream actively developed"
+
+- name: "upstream/maintained"
+  color: "0E8A16"
+  description: "Upstream maintained but slow"
+
+- name: "upstream/stale"
+  color: "FBCA04"
+  description: "Upstream inactive 6+ months"
+
+- name: "upstream/archived"
+  color: "D93F0B"
+  description: "Upstream archived/abandoned"
+
+# =============================================================================
+# Effort Labels (prefix: effort/)
+# =============================================================================
+- name: "effort/trivial"
+  color: "C2E0C6"
+  description: "< 1 hour of work"
+
+- name: "effort/small"
+  color: "0E8A16"
+  description: "1-4 hours of work"
+
+- name: "effort/medium"
+  color: "FBCA04"
+  description: "1-2 days of work"
+
+- name: "effort/large"
+  color: "D93F0B"
+  description: "3-5 days of work"
+
+- name: "effort/epic"
+  color: "B60205"
+  description: "1+ weeks of work"
+
+# =============================================================================
+# Status Labels (prefix: status/)
+# =============================================================================
+- name: "status/upstream"
+  color: "EDEDED"
+  description: "Depends on upstream changes"
+
+- name: "status/needs-triage"
+  color: "D93F0B"
+  description: "Needs initial assessment"
+
+- name: "status/needs-review"
+  color: "FBCA04"
+  description: "Ready for review"
+
+- name: "status/stale"
+  color: "EDEDED"
+  description: "No activity for 30+ days"
+
+- name: "status/wontfix"
+  color: "FFFFFF"
+  description: "Will not be addressed"
+
+- name: "status/duplicate"
+  color: "CFD3D7"
+  description: "Duplicate of another issue"
+
+# =============================================================================
+# Priority Labels (prefix: priority/)
+# =============================================================================
+- name: "priority/critical"
+  color: "B60205"
+  description: "Must be addressed immediately"
+
+- name: "priority/high"
+  color: "D93F0B"
+  description: "High priority item"
+
+- name: "priority/medium"
+  color: "FBCA04"
+  description: "Normal priority"
+
+- name: "priority/low"
+  color: "0E8A16"
+  description: "Nice to have"
+
+# =============================================================================
+# Gap Analysis Labels (prefix: gap/)
+# =============================================================================
+- name: "gap/feature"
+  color: "7057FF"
+  description: "Missing feature identified"
+
+- name: "gap/integration"
+  color: "008672"
+  description: "Integration gap identified"
+
+- name: "gap/tooling"
+  color: "E4E669"
+  description: "Tooling gap identified"
+
+- name: "gap/ecosystem"
+  color: "5319E7"
+  description: "MCP ecosystem gap"

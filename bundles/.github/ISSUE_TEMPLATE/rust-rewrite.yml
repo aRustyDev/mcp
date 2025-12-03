@@ -1,0 +1,63 @@
+name: "Rust Rewrite"
+description: "Track Rust rewrite of an MCP server"
+title: "[Rust] "
+labels: ["type/rewrite", "phase/planning"]
+body:
+  - type: input
+    id: original-server
+    attributes:
+      label: Original Server
+      placeholder: "e.g., mcp/fetch (Python)"
+    validations:
+      required: true
+
+  - type: input
+    id: original-repo
+    attributes:
+      label: Original Repository
+      placeholder: "https://github.com/..."
+
+  - type: dropdown
+    id: phase
+    attributes:
+      label: Current Phase
+      options:
+        - Planning
+        - Researching
+        - Designing
+        - Implementing
+        - Testing
+        - Complete
+    validations:
+      required: true
+
+  - type: textarea
+    id: rationale
+    attributes:
+      label: Rewrite Rationale
+      description: "Why rewrite in Rust?"
+      placeholder: |
+        - Performance requirements
+        - Memory efficiency
+        - Binary distribution
+        - Learning exercise
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: "What functionality will be included?"
+      placeholder: |
+        Tools to implement:
+        - [ ] tool_one
+        - [ ] tool_two
+
+        Transport:
+        - [ ] stdio
+        - [ ] HTTP native
+
+  - type: textarea
+    id: design-notes
+    attributes:
+      label: Design Notes
+      description: "Architecture decisions, crate choices, etc."

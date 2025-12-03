@@ -1,0 +1,76 @@
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+categories:
+  - title: 'New MCP Servers'
+    labels:
+      - 'type/research'
+      - 'category/ai-ml'
+      - 'category/data'
+      - 'category/developer-tools'
+  - title: 'Rust Implementations'
+    labels:
+      - 'lang/rust'
+      - 'rust/complete'
+  - title: 'Docker Updates'
+    labels:
+      - 'type/docker'
+      - 'docker/image-published'
+  - title: 'Transport Improvements'
+    labels:
+      - 'transport/http-streamed'
+      - 'transport/websocket'
+  - title: 'Documentation'
+    labels:
+      - 'type/documentation'
+      - 'docs/llms-txt-ready'
+  - title: 'CI/CD'
+    labels:
+      - 'type/ci-cd'
+  - title: 'Bug Fixes'
+    labels:
+      - 'type/bug'
+  - title: 'Other Changes'
+    labels:
+      - '*'
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+change-title-escapes: '\<*_&'
+
+version-resolver:
+  major:
+    labels:
+      - 'breaking'
+  minor:
+    labels:
+      - 'type/research'
+      - 'rust/complete'
+  patch:
+    labels:
+      - 'type/bug'
+      - 'type/documentation'
+  default: patch
+
+exclude-labels:
+  - 'skip-changelog'
+  - 'duplicate'
+  - 'wontfix'
+
+autolabeler:
+  - label: 'type/documentation'
+    files:
+      - 'docs/**/*'
+      - '*.md'
+  - label: 'type/docker'
+    files:
+      - '**/Dockerfile*'
+      - 'docker/**/*'
+  - label: 'type/ci-cd'
+    files:
+      - '.github/**/*'

@@ -1,0 +1,71 @@
+name: "MCP Server Discovery"
+description: "Document a newly identified MCP server"
+title: "[Discovery] "
+labels: ["type/research", "phase/discovery", "status/needs-triage"]
+body:
+  - type: input
+    id: server-name
+    attributes:
+      label: Server Name
+      placeholder: "e.g., mcp/fetch"
+    validations:
+      required: true
+
+  - type: input
+    id: repository
+    attributes:
+      label: Repository URL
+      placeholder: "https://github.com/org/repo"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - search
+        - git
+        - docs
+        - workflow
+        - reasoning
+        - db
+        - llm
+        - other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Current Transport Support
+      options:
+        - stdio only
+        - HTTP SSE native
+        - Streamable HTTP native
+        - Multiple transports
+        - Unknown
+    validations:
+      required: true
+
+  - type: textarea
+    id: tools
+    attributes:
+      label: Tools Provided
+      description: "List the MCP tools this server exposes"
+      placeholder: |
+        - tool_name: Description
+        - another_tool: Description
+
+  - type: textarea
+    id: docker-status
+    attributes:
+      label: Docker Status
+      description: "Official image? Community image? None?"
+      placeholder: "e.g., Official image at mcp/fetch on Docker Hub"
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Initial Notes
+      description: "Any observations, concerns, or opportunities"

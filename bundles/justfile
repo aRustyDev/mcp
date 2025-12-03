@@ -1,0 +1,235 @@
+# =============================================================================
+# MCP Template Bundle - Setup Justfile
+# =============================================================================
+# After downloading: just setup /path/to/target/repo
+# Or: just setup-remote aRustyDev/repo-name
+# =============================================================================
+
+# Default - show help
+default:
+    @just --list
+
+# =============================================================================
+# Local Setup (for cloned repos)
+# =============================================================================
+
+# Apply templates to a local directory
+setup target=".":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    TARGET="{{ target }}"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    FORCE="${FORCE:-false}"
+
+    echo "╔════════════════════════════════════════════════════════════════════╗"
+    echo "║ MCP Template Setup                                                 ║"
+    echo "╚════════════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Target: $TARGET"
+    echo "Force overwrite: $FORCE"
+    echo ""
+
+    # Resolve target to absolute path
+    TARGET=$(cd "$TARGET" && pwd)
+
+    # Check if target is a git repo
+    if [ ! -d "$TARGET/.git" ]; then
+        echo "⚠ Warning: Target is not a git repository"
+        read -p "Continue anyway? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            exit 1
+        fi
+    fi
+
+    # Create directories
+    mkdir -p "$TARGET/.github/ISSUE_TEMPLATE"
+    mkdir -p "$TARGET/.github/workflows"
+
+    copy_file() {
+        local src="$1"
+        local dest="$2"
+
+        if [ -f "$dest" ] && [ "$FORCE" != "true" ]; then
+            echo "  ⚠ Skipping $(basename "$dest") (exists, use FORCE=true to overwrite)"
+        else
+            cp "$src" "$dest"
+            echo "  ✓ $(basename "$dest")"
+        fi
+    }
+
+    echo "→ Copying root files..."
+    [ -f "$SCRIPT_DIR/SECURITY.md" ] && copy_file "$SCRIPT_DIR/SECURITY.md" "$TARGET/SECURITY.md"
+    [ -f "$SCRIPT_DIR/CONTRIBUTING.md" ] && copy_file "$SCRIPT_DIR/CONTRIBUTING.md" "$TARGET/CONTRIBUTING.md"
+
+    echo "→ Copying .github files..."
+    for file in CODEOWNERS FUNDING.yml labels.yml pull_request_template.md release-drafter.yml dependabot.yml; do
+        [ -f "$SCRIPT_DIR/.github/$file" ] && copy_file "$SCRIPT_DIR/.github/$file" "$TARGET/.github/$file"
+    done
+
+    echo "→ Copying issue templates..."
+    for file in "$SCRIPT_DIR/.github/ISSUE_TEMPLATE/"*.yml; do
+        [ -f "$file" ] && copy_file "$file" "$TARGET/.github/ISSUE_TEMPLATE/$(basename "$file")"
+    done
+
+    echo "→ Copying workflows..."
+    for file in "$SCRIPT_DIR/.github/workflows/"*.yml; do
+        [ -f "$file" ] && copy_file "$file" "$TARGET/.github/workflows/$(basename "$file")"
+    done
+
+    echo ""
+    echo "╔════════════════════════════════════════════════════════════════════╗"
+    echo "║ Setup Complete!                                                    ║"
+    echo "╠════════════════════════════════════════════════════════════════════╣"
+    echo "║ Next steps:                                                        ║"
+    echo "║ 1. Edit .github/CODEOWNERS - replace @aRustyDev                    ║"
+    echo "║ 2. Edit .github/FUNDING.yml - add your links                       ║"
+    echo "║ 3. Commit and push changes                                         ║"
+    echo "║ 4. Run: gh workflow run label-sync.yml                             ║"
+    echo "╚════════════════════════════════════════════════════════════════════╝"
+
+# Apply templates with force overwrite
+setup-force target=".":
+    FORCE=true just setup "{{ target }}"
+
+# =============================================================================
+# Remote Setup (via GitHub API)
+# =============================================================================
+
+# Apply templates to a remote GitHub repository
+setup-remote repo:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+    echo "╔════════════════════════════════════════════════════════════════════╗"
+    echo "║ MCP Template Remote Setup                                          ║"
+    echo "╚════════════════════════════════════════════════════════════════════╝"
+    echo ""
+    echo "Target repository: $REPO"
+    echo ""
+
+    # Check gh CLI auth
+    if ! gh auth status &>/dev/null; then
+        echo "✗ Not authenticated with GitHub CLI"
+        echo "  Run: gh auth login"
+        exit 1
+    fi
+
+    # Verify repo exists
+    if ! gh repo view "$REPO" &>/dev/null; then
+        echo "✗ Repository not found: $REPO"
+        exit 1
+    fi
+
+    apply_file() {
+        local src="$1"
+        local dest="$2"
+
+        if [[ ! -f "$src" ]]; then
+            return
+        fi
+
+        local content
+        content=$(base64 < "$src")
+
+        # Check if file exists in repo
+        local existing_sha
+        existing_sha=$(gh api "repos/$REPO/contents/$dest" --jq '.sha' 2>/dev/null || echo "")
+
+        if [[ -n "$existing_sha" ]]; then
+            echo "  ↻ Updating: $dest"
+            gh api "repos/$REPO/contents/$dest" \
+                -X PUT \
+                -f message="chore: update $dest from mcp-templates" \
+                -f content="$content" \
+                -f sha="$existing_sha" \
+                >/dev/null 2>&1 || echo "    ✗ Failed"
+        else
+            echo "  ✓ Creating: $dest"
+            gh api "repos/$REPO/contents/$dest" \
+                -X PUT \
+                -f message="chore: add $dest from mcp-templates" \
+                -f content="$content" \
+                >/dev/null 2>&1 || echo "    ✗ Failed"
+        fi
+    }
+
+    echo "→ Applying root files..."
+    apply_file "$SCRIPT_DIR/SECURITY.md" "SECURITY.md"
+    apply_file "$SCRIPT_DIR/CONTRIBUTING.md" "CONTRIBUTING.md"
+
+    echo "→ Applying .github files..."
+    for file in CODEOWNERS FUNDING.yml labels.yml pull_request_template.md release-drafter.yml; do
+        apply_file "$SCRIPT_DIR/.github/$file" ".github/$file"
+    done
+
+    echo "→ Applying issue templates..."
+    for file in "$SCRIPT_DIR/.github/ISSUE_TEMPLATE/"*.yml; do
+        [[ -f "$file" ]] && apply_file "$file" ".github/ISSUE_TEMPLATE/$(basename "$file")"
+    done
+
+    echo "→ Applying workflows..."
+    for file in "$SCRIPT_DIR/.github/workflows/"*.yml; do
+        [[ -f "$file" ]] && apply_file "$file" ".github/workflows/$(basename "$file")"
+    done
+
+    echo ""
+    echo "╔════════════════════════════════════════════════════════════════════╗"
+    echo "║ Remote Setup Complete!                                             ║"
+    echo "╠════════════════════════════════════════════════════════════════════╣"
+    echo "║ Next: Trigger label sync workflow                                  ║"
+    echo "║       gh workflow run label-sync.yml -R $REPO                      ║"
+    echo "╚════════════════════════════════════════════════════════════════════╝"
+
+# =============================================================================
+# Sync Labels
+# =============================================================================
+
+# Sync labels to a repository using the bundled labels.yml
+sync-labels repo:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    LABELS_FILE="$SCRIPT_DIR/.github/labels.yml"
+
+    if [[ ! -f "$LABELS_FILE" ]]; then
+        echo "Error: labels.yml not found"
+        exit 1
+    fi
+
+    echo "Syncing labels to $REPO..."
+
+    # Use yq if available, otherwise basic parsing
+    if command -v yq &>/dev/null; then
+        yq -r '.[] | "\(.name)|\(.color)|\(.description)"' "$LABELS_FILE" | while IFS='|' read -r name color desc; do
+            gh label create "$name" --repo "$REPO" --color "$color" --description "$desc" --force 2>/dev/null || true
+        done
+    else
+        grep -E "^- name:" "$LABELS_FILE" | sed 's/- name: "//;s/"$//' | while read -r name; do
+            color=$(grep -A1 "name: \"$name\"" "$LABELS_FILE" | grep "color:" | sed 's/.*color: "//;s/"$//')
+            desc=$(grep -A2 "name: \"$name\"" "$LABELS_FILE" | grep "description:" | sed 's/.*description: "//;s/"$//')
+            gh label create "$name" --repo "$REPO" --color "$color" --description "$desc" --force 2>/dev/null || true
+        done
+    fi
+
+    echo "✓ Labels synced"
+
+# =============================================================================
+# Info
+# =============================================================================
+
+# Show bundle contents
+list:
+    @echo "MCP Template Bundle Contents:"
+    @echo ""
+    @find . -type f -not -name 'justfile' -not -name 'MANIFEST.md' -not -name 'VERSION' | sort | sed 's|^\./||'
+
+# Show version info
+version:
+    @cat VERSION 2>/dev/null || echo "Version: development"

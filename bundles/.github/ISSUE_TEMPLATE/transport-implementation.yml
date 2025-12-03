@@ -1,0 +1,53 @@
+name: "Transport Implementation"
+description: "Track HTTP/SSE transport work for an MCP server"
+title: "[Transport] "
+labels: ["type/implementation", "type/docker"]
+body:
+  - type: input
+    id: server-name
+    attributes:
+      label: MCP Server
+      placeholder: "e.g., mcp/fetch"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: current-transport
+    attributes:
+      label: Current Transport
+      options:
+        - stdio only
+        - HTTP SSE native (needs verification)
+        - Streamable HTTP native (needs verification)
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target-transport
+    attributes:
+      label: Target Transport
+      options:
+        - Streamable HTTP (supergateway wrapper)
+        - Native Streamable HTTP implementation
+        - HTTP SSE implementation
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation-approach
+    attributes:
+      label: Implementation Approach
+      placeholder: |
+        - [ ] Verify current transport capabilities
+        - [ ] Create Dockerfile (if wrapper needed)
+        - [ ] Create docker-compose service config
+        - [ ] Create Traefik routing config
+        - [ ] Test via Traefik
+        - [ ] HADOLint compliance check
+        - [ ] Document in service yaml
+
+  - type: textarea
+    id: blockers
+    attributes:
+      label: Blockers/Concerns
+      description: "Any technical challenges identified"

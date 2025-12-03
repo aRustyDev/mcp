@@ -1,0 +1,52 @@
+name: "Gap Identification"
+description: "Document a gap in MCP server ecosystem"
+title: "[Gap] "
+labels: ["type/research", "gap/feature"]
+body:
+  - type: input
+    id: gap-title
+    attributes:
+      label: Gap Title
+      placeholder: "e.g., No MCP server for Kubernetes management"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: gap-type
+    attributes:
+      label: Gap Type
+      options:
+        - Missing server category
+        - Missing feature in existing server
+        - Integration gap
+        - Tooling gap
+        - Documentation gap
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Gap Description
+      description: "What's missing and why it matters"
+    validations:
+      required: true
+
+  - type: textarea
+    id: existing-alternatives
+    attributes:
+      label: Existing Alternatives
+      description: "What partial solutions exist?"
+      placeholder: |
+        - Server A provides X but not Y
+        - Manual workaround: ...
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: "How should this gap be filled?"
+      placeholder: |
+        Option 1: Extend existing server
+        Option 2: Create new server
+        Option 3: ...

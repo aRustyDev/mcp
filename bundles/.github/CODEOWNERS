@@ -1,0 +1,19 @@
+# MCP Server Development - Code Owners
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owner for everything
+* @aRustyDev
+
+# Documentation
+/docs/ @aRustyDev
+*.md @aRustyDev
+
+# Docker configurations
+/docker/ @aRustyDev
+**/Dockerfile* @aRustyDev
+
+# GitHub configurations
+/.github/ @aRustyDev
+
+# Justfile automation
+justfile @aRustyDev
