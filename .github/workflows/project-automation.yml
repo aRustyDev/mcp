@@ -2,16 +2,28 @@ name: Project Automation
 
 on:
   issues:
-    types: [opened, closed, reopened]
+    types: [opened]
   pull_request:
-    types: [opened, closed, reopened]
+    types: [opened]
+
+# Secrets loaded from 1Password via OP_SVC_TOKEN service account
+# 1Password reference: op://vault/item/field
 
 jobs:
   add-to-project:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/add-to-project@v1.0.2
+      - name: Load secrets from 1Password
+        id: op-secrets
+        uses: 1password/load-secrets-action@v2
         with:
-          # TODO: Update with actual project URL
-          project-url: https://github.com/orgs/YOUR_ORG/projects/PROJECT_NUMBER
-          github-token: ${{ secrets.PROJECT_TOKEN }}
+          export-env: false
+        env:
+          OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SVC_TOKEN }}
+          PROJECT_PAT: op://lzu2wctpsmoe3b5gq4f7tql4fi/mcp-development-project-pat/credential
+
+      - name: Add to project
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: https://github.com/users/aRustyDev/projects/22
+          github-token: ${{ steps.op-secrets.outputs.PROJECT_PAT }}
