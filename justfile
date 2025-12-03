@@ -90,6 +90,29 @@ fork-mcp repo:
     just _auto-setup "{{ github_org }}/${FORK_NAME}" "fork"
     just _auto-setup "{{ github_org }}/${RUST_NAME}" "rust"
 
+    # Step 7: Deploy templates
+    echo ""
+    echo "→ Step 7: Deploying templates..."
+    just _deploy-templates "{{ github_org }}/${FORK_NAME}" "fork"
+    just _deploy-templates "{{ github_org }}/${RUST_NAME}" "rust"
+
+    # Step 8: Create milestones
+    echo ""
+    echo "→ Step 8: Creating milestones..."
+    just _create-milestones "{{ github_org }}/${FORK_NAME}" "fork"
+    just _create-milestones "{{ github_org }}/${RUST_NAME}" "rust"
+
+    # Step 9: Link to project
+    echo ""
+    echo "→ Step 9: Linking to project..."
+    just _link-to-project "{{ github_org }}/${FORK_NAME}"
+    just _link-to-project "{{ github_org }}/${RUST_NAME}"
+
+    # Step 10: Populate initial data
+    echo ""
+    echo "→ Step 10: Populating initial data..."
+    just _populate-initial-data "{{ github_org }}/${FORK_NAME}" "${REPO}"
+
     # Summary
     echo ""
     echo "╔════════════════════════════════════════════════════════════════════╗"
@@ -97,6 +120,7 @@ fork-mcp repo:
     echo "╠════════════════════════════════════════════════════════════════════╣"
     echo "║ Fork:  https://github.com/{{ github_org }}/${FORK_NAME}"
     echo "║ Rust:  https://github.com/{{ github_org }}/${RUST_NAME}"
+    echo "║ Project: https://github.com/users/{{ github_org }}/projects/{{ project_number }}"
     echo "╚════════════════════════════════════════════════════════════════════╝"
 
 # =============================================================================
@@ -292,6 +316,363 @@ _auto-setup repo type:
     #     2>/dev/null || true
 
     echo "  ✓ Auto-setup complete"
+
+# =============================================================================
+# Template Management
+# =============================================================================
+
+# Copy templates to a repository (CODEOWNERS, SECURITY, CONTRIBUTING, FUNDING)
+_deploy-templates repo type:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+    TYPE="{{ type }}"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+
+    echo "  Deploying templates to ${REPO}..."
+
+    # Create temp directory for template files
+    TEMP_DIR=$(mktemp -d)
+    trap "rm -rf $TEMP_DIR" EXIT
+
+    if [[ "$TYPE" == "rust" ]]; then
+        # For Rust repos, templates should already be included from tmpl-rust
+        echo "  ℹ Rust repos use templates from tmpl-rust"
+    else
+        # For fork repos, push template files
+        # CODEOWNERS
+        cat > "$TEMP_DIR/CODEOWNERS" << 'CODEOWNERS_CONTENT'
+# MCP Server Fork - Code Owners
+# TEMPLATE: Replace @aRustyDev with your GitHub username
+
+* @aRustyDev
+CODEOWNERS_CONTENT
+
+        # SECURITY.md
+        cat > "$TEMP_DIR/SECURITY.md" << 'SECURITY_CONTENT'
+# Security Policy
+
+## Reporting a Vulnerability
+
+Please report security vulnerabilities via [GitHub's private vulnerability reporting](../../security/advisories/new).
+
+## Supported Versions
+
+| Version | Supported          |
+| ------- | ------------------ |
+| main    | :white_check_mark: |
+
+For detailed security guidelines, see the [main MCP repository](https://github.com/aRustyDev/mcp/blob/main/SECURITY.md).
+SECURITY_CONTENT
+
+        # CONTRIBUTING.md
+        cat > "$TEMP_DIR/CONTRIBUTING.md" << 'CONTRIBUTING_CONTENT'
+# Contributing
+
+Thank you for your interest in contributing!
+
+## Quick Start
+
+1. Fork and clone the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## Guidelines
+
+- Follow existing code style
+- Write tests for new functionality
+- Update documentation as needed
+
+For detailed contribution guidelines, see the [main MCP repository](https://github.com/aRustyDev/mcp/blob/main/CONTRIBUTING.md).
+CONTRIBUTING_CONTENT
+
+        # Push files via GitHub API
+        for file in CODEOWNERS SECURITY.md CONTRIBUTING.md; do
+            if [[ -f "$TEMP_DIR/$file" ]]; then
+                CONTENT=$(base64 < "$TEMP_DIR/$file")
+                DEST_PATH=".github/$file"
+                [[ "$file" != "CODEOWNERS" ]] && DEST_PATH="$file"
+
+                gh api "repos/$REPO/contents/$DEST_PATH" \
+                    -X PUT \
+                    -f message="chore: add $file template" \
+                    -f content="$CONTENT" \
+                    2>/dev/null || echo "    ⚠ Could not create $file (may exist)"
+            fi
+        done
+    fi
+
+    echo "  ✓ Templates deployed"
+
+# =============================================================================
+# Milestone Management
+# =============================================================================
+
+# Create standard milestones for a repository
+_create-milestones repo type:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+    TYPE="{{ type }}"
+
+    echo "  Creating milestones for ${REPO}..."
+
+    if [[ "$TYPE" == "rust" ]]; then
+        # Rust-specific milestones
+        declare -a MILESTONES=(
+            "v0.1.0 - Core Implementation|Basic MCP server with essential tools|open"
+            "v0.2.0 - HTTP Transport|Native Streamable HTTP transport support|open"
+            "v0.3.0 - Docker Ready|Production-ready Docker image|open"
+            "v1.0.0 - Parity Release|Feature parity with original server|open"
+        )
+    else
+        # Fork milestones
+        declare -a MILESTONES=(
+            "Analysis Complete|Upstream analysis and documentation done|open"
+            "Transport Implementation|HTTP transport wrapper or native support|open"
+            "Docker Image|Container build and publication|open"
+        )
+    fi
+
+    for milestone_data in "${MILESTONES[@]}"; do
+        IFS='|' read -r title desc state <<< "$milestone_data"
+        gh api "repos/$REPO/milestones" \
+            -X POST \
+            -f title="$title" \
+            -f description="$desc" \
+            -f state="$state" \
+            2>/dev/null || echo "    ⚠ Milestone '$title' may exist"
+    done
+
+    echo "  ✓ Milestones created"
+
+# =============================================================================
+# Project Linking
+# =============================================================================
+
+# Link repository to the main MCP project
+_link-to-project repo:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+
+    if [[ -z "{{ project_number }}" ]]; then
+        echo "  ⚠ MCP_PROJECT_NUMBER not set, skipping project link"
+        return 0
+    fi
+
+    echo "  Linking ${REPO} to project {{ project_number }}..."
+
+    # Get project ID
+    PROJECT_ID=$(gh api graphql -f query='
+        query($login: String!, $number: Int!) {
+            user(login: $login) {
+                projectV2(number: $number) {
+                    id
+                }
+            }
+        }' -f login="{{ github_org }}" -F number="{{ project_number }}" \
+        --jq '.data.user.projectV2.id' 2>/dev/null)
+
+    # Get repository ID
+    REPO_ID=$(gh api "repos/$REPO" --jq '.node_id' 2>/dev/null)
+
+    if [[ -n "$PROJECT_ID" && -n "$REPO_ID" ]]; then
+        # Link repository to project
+        gh api graphql -f query='
+            mutation($projectId: ID!, $repositoryId: ID!) {
+                linkProjectV2ToRepository(input: {projectId: $projectId, repositoryId: $repositoryId}) {
+                    repository { nameWithOwner }
+                }
+            }' -f projectId="$PROJECT_ID" -f repositoryId="$REPO_ID" \
+            2>/dev/null && echo "  ✓ Repository linked to project" || echo "  ⚠ Could not link (may already be linked)"
+    else
+        echo "  ⚠ Could not get project or repository ID"
+    fi
+
+# =============================================================================
+# Initial Data Population
+# =============================================================================
+
+# Populate initial project data for a server
+_populate-initial-data repo upstream:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+    UPSTREAM="{{ upstream }}"
+
+    echo "  Populating initial data for ${REPO}..."
+
+    # Get upstream info
+    UPSTREAM_INFO=$(gh api "repos/$UPSTREAM" --jq '{
+        description: .description,
+        language: .language,
+        stars: .stargazers_count,
+        topics: .topics
+    }' 2>/dev/null || echo "{}")
+
+    if [[ -n "$UPSTREAM_INFO" && "$UPSTREAM_INFO" != "{}" ]]; then
+        # Create discovery issue with populated data
+        LANG=$(echo "$UPSTREAM_INFO" | jq -r '.language // "Unknown"')
+        DESC=$(echo "$UPSTREAM_INFO" | jq -r '.description // "No description"')
+        STARS=$(echo "$UPSTREAM_INFO" | jq -r '.stars // 0')
+        TOPICS=$(echo "$UPSTREAM_INFO" | jq -r '.topics | join(", ") // "none"')
+
+        BODY=$(cat <<EOF
+## MCP Server Profile
+
+### Basic Information
+- **Original Repository**: https://github.com/$UPSTREAM
+- **Language**: $LANG
+- **Stars**: $STARS
+- **Topics**: $TOPICS
+- **Description**: $DESC
+
+### Transport Status
+- [ ] Analyze current transport (stdio/http)
+- [ ] Document HTTP wrapper status
+- [ ] Identify streamable HTTP potential
+
+### Docker Status
+- [ ] Check for official Docker image
+- [ ] Check Docker Hub for community images
+- [ ] Document containerization status
+
+### Tools & Capabilities
+- [ ] Document all MCP tools
+- [ ] List resources provided
+- [ ] Note any prompts
+
+### Notes
+_Add analysis notes here_
+EOF
+        )
+
+        ISSUE_URL=$(gh issue create --repo "$REPO" \
+            --title "[Discovery] Server Profile: ${UPSTREAM##*/}" \
+            --body "$BODY" \
+            --label "type/research,phase/discovery,lang/${LANG,,}" \
+            2>/dev/null || echo "")
+
+        if [[ -n "$ISSUE_URL" ]]; then
+            echo "  ✓ Created discovery issue: $ISSUE_URL"
+
+            # Add to project if configured
+            if [[ -n "{{ project_number }}" ]]; then
+                gh project item-add "{{ project_number }}" --owner "{{ github_org }}" --url "$ISSUE_URL" 2>/dev/null || true
+            fi
+        fi
+    fi
+
+    echo "  ✓ Initial data populated"
+
+# =============================================================================
+# Template Bundle Management
+# =============================================================================
+
+# Apply templates to a remote repository (downloads release or uses local bundles/)
+apply-templates repo version="latest":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    REPO="{{ repo }}"
+    VERSION="{{ version }}"
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    TEMP_DIR=$(mktemp -d)
+    trap "rm -rf $TEMP_DIR" EXIT
+
+    echo "╔════════════════════════════════════════════════════════════════════╗"
+    echo "║ Applying MCP Templates to ${REPO}"
+    echo "╚════════════════════════════════════════════════════════════════════╝"
+    echo ""
+
+    # Try to download release, fallback to local bundles/
+    cd "$TEMP_DIR"
+
+    if [[ "$VERSION" == "local" ]]; then
+        echo "→ Using local bundles/ directory..."
+        BUNDLE_DIR="$SCRIPT_DIR/bundles"
+    else
+        echo "→ Downloading template bundle (${VERSION})..."
+        if gh release download ${VERSION:+$VERSION} --repo "{{ github_org }}/mcp" --pattern 'mcp-templates-*.tar.gz' 2>/dev/null; then
+            tar -xzf mcp-templates-*.tar.gz
+            BUNDLE_DIR=$(find . -maxdepth 1 -type d -name 'mcp-templates-*' | head -1)
+        else
+            echo "  ⚠ No release found, using local bundles/..."
+            BUNDLE_DIR="$SCRIPT_DIR/bundles"
+        fi
+    fi
+
+    if [[ -z "$BUNDLE_DIR" || ! -d "$BUNDLE_DIR" ]]; then
+        echo "Error: Could not find bundle directory"
+        exit 1
+    fi
+
+    # Use the bundles/justfile to apply
+    cd "$BUNDLE_DIR"
+    just setup-remote "$REPO"
+
+# Apply templates from local bundles/ to a remote repository
+apply-templates-local repo:
+    just apply-templates "{{ repo }}" "local"
+
+# Download template bundle to current directory
+download-templates version="latest":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    VERSION="{{ version }}"
+
+    echo "Downloading MCP template bundle..."
+
+    if [[ "$VERSION" == "latest" ]]; then
+        gh release download --repo "{{ github_org }}/mcp" --pattern 'mcp-templates-*.tar.gz'
+    else
+        gh release download "$VERSION" --repo "{{ github_org }}/mcp" --pattern 'mcp-templates-*.tar.gz'
+    fi
+
+    echo ""
+    echo "✓ Downloaded. To apply:"
+    echo "  tar -xzf mcp-templates-*.tar.gz"
+    echo "  cd mcp-templates-*"
+    echo "  just setup /path/to/repo      # local repo"
+    echo "  just setup-remote owner/repo  # remote repo"
+
+# List available template bundle versions
+list-bundle-versions:
+    @gh release list --repo "{{ github_org }}/mcp" --limit 10
+
+# Build a local bundle tarball (for testing)
+build-bundle:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+    VERSION="local-$(date +%Y%m%d-%H%M%S)"
+
+    echo "Building bundle from bundles/..."
+
+    # Create versioned copy
+    cp -r "$SCRIPT_DIR/bundles" "mcp-templates-$VERSION"
+
+    # Add VERSION file
+    cat > "mcp-templates-$VERSION/VERSION" << EOF
+    Version: $VERSION
+    Built: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+    Source: local build
+    EOF
+
+    # Create tarball
+    tar -czvf "mcp-templates-$VERSION.tar.gz" "mcp-templates-$VERSION/"
+    rm -rf "mcp-templates-$VERSION"
+
+    echo ""
+    echo "✓ Created: mcp-templates-$VERSION.tar.gz"
 
 # =============================================================================
 # Utility Recipes
