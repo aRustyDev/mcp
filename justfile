@@ -20,7 +20,7 @@ project_number := env("MCP_PROJECT_NUMBER", "")
 project_url := "https://github.com/orgs/" + github_org + "/projects/" + project_number
 
 # Target repository - set via 'just init' or override per-command
-target_repo := ""
+target_repo := "aRustyDev/mcp"
 
 # Paths
 justfile_dir := justfile_directory()
@@ -552,11 +552,11 @@ apply-ruleset repo=target_repo ruleset_file="": (_require-repo repo)
     RULESET_NAME=$(jq -r '.name' "{{ ruleset_file }}")
     EXISTING_ID=$(gh api "repos/{{ repo }}/rulesets" --jq ".[] | select(.name == \"$RULESET_NAME\") | .id" 2>/dev/null || echo "")
     if [[ -n "$EXISTING_ID" ]]; then
-        gh api "repos/{{ repo }}/rulesets/$EXISTING_ID" -X PUT --input "{{ ruleset_file }}" \
+        gh api "repos/{{ repo }}/rulesets/$EXISTING_ID" -X PUT --input "{{ ruleset_file }}" --silent \
             && echo "✓ Updated ruleset: $RULESET_NAME" \
             || echo "⚠ Failed to update ruleset: $RULESET_NAME"
     else
-        gh api "repos/{{ repo }}/rulesets" -X POST --input "{{ ruleset_file }}" \
+        gh api "repos/{{ repo }}/rulesets" -X POST --input "{{ ruleset_file }}" --silent \
             && echo "✓ Created ruleset: $RULESET_NAME" \
             || echo "⚠ Failed to create ruleset: $RULESET_NAME"
     fi
@@ -570,7 +570,9 @@ protect-repo repo=target_repo: (_require-repo repo) (_require-dir rulesets_dir)
     echo "╚════════════════════════════════════════════════════════════════════╝"
     echo "→ Applying branch protection rulesets..."
     just apply-ruleset "{{ repo }}" "{{ rulesets_dir }}/main-branch-protection.json"
+    just apply-ruleset "{{ repo }}" "{{ rulesets_dir }}/main-pr-reviews.json"
     just apply-ruleset "{{ repo }}" "{{ rulesets_dir }}/integration-branch-protection.json"
+    just apply-ruleset "{{ repo }}" "{{ rulesets_dir }}/integration-pr-reviews.json"
     echo "╔════════════════════════════════════════════════════════════════════╗"
     echo "║ Repository Protection Complete!"
     echo "╚════════════════════════════════════════════════════════════════════╝"
