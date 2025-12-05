@@ -263,10 +263,33 @@ bundles/
 │   │   └── global/              # Global config templates (manual install)
 │   │       ├── common-servers.json
 │   │       └── install.sh
+│   ├── semgrep/                 # Semgrep configurations (Phases 16, 20)
+│   │   └── rules/
+│   │       └── mcp/             # MCP-specific security rules
+│   │           ├── injection/   # Pattern-based injection rules (Phase 16)
+│   │           ├── protocol/    # Protocol validation rules (Phase 16)
+│   │           └── taint/       # Taint tracking rules (Phase 20)
+│   ├── sast/                    # SAST configuration (Phases 16, 20)
+│   │   ├── gate-config.yaml     # Quality gate thresholds
+│   │   ├── suppressions.yaml    # Finding suppressions
+│   │   ├── severity-overrides.yaml  # CWE severity mapping
+│   │   └── cwe-mapping.yaml     # Rule-to-CWE mapping
 │   ├── .releaserc.json          # Semantic release (Phase 24)
 │   ├── codecov.yml              # Coverage config (Phase 09)
 │   ├── .gitleaks.toml           # Secret scanning (Phase 17)
 │   └── ...                      # Tool configurations
+├── .codeql/                     # CodeQL configuration (Phase 20)
+│   ├── codeql-config.yml        # Query configuration
+│   └── queries/
+│       └── mcp/                 # Custom MCP dataflow queries
+├── scripts/                     # Utility scripts (various phases)
+│   ├── sarif-dedup.py           # SARIF deduplication (Phase 16, 20)
+│   ├── sarif-gate.py            # Quality gate evaluation (Phase 16)
+│   ├── sarif-baseline.py        # Baseline comparison (Phase 16)
+│   ├── sarif-report.py          # Report generation (Phase 16)
+│   ├── miri-to-sarif.py         # Miri SARIF converter (Phase 18)
+│   ├── fuzz-crashes-to-sarif.py # Fuzz crash SARIF converter (Phase 19)
+│   └── pysa-to-sarif.py         # Pysa SARIF converter (Phase 20)
 ├── docs/
 │   └── ...                      # Documentation
 ├── justfile                     # Setup automation
@@ -294,6 +317,8 @@ bundles/
 ### Strategies
 - [AI Context Strategy](../docs/strategies/ai-context.md) - AGENT.md and AI agent behavioral guidance
 - [Policy-as-Code Strategy](../docs/strategies/policy-as-code.md) - OPA/Rego unified policy library
+- [SAST Strategy](../docs/strategies/sast-strategy.md) - Static analysis tool selection, phase boundaries, and quality gates
+- [SARIF Strategy](../docs/strategies/sarif-strategy.md) - SARIF aggregation, deduplication, and GitHub Security integration
 - [Tagging and Versioning Strategy](../docs/strategies/tagging-and-versioning.md) - Version source of truth and release coordination
 
 ---
@@ -321,8 +346,11 @@ bundles/
 | Release | 24-27 | ~20 |
 | Automation | 28-30 | ~11 |
 
-**Total Estimated: ~207 workflow/config/policy files**
+**Total Estimated: ~230 workflow/config/policy files**
 
 *Notes:*
 - *Foundation includes +9 MCP client config files (5 project-local, 4 global)*
 - *Security includes +15 OPA/Rego policy files from Phase 22a policy library*
+- *Security includes +15 Semgrep rules for MCP patterns and taint tracking (Phases 16, 20)*
+- *Security includes +7 SARIF utility scripts and +4 SAST configuration files*
+- *Security includes +3 CodeQL custom queries for MCP (Phase 20)*

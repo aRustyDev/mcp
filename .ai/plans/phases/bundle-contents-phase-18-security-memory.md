@@ -6,6 +6,9 @@ depends_on:
   - 9837e690-439f-42cb-811f-dbcff58a6af9  # phase-17
 checklists:
   - 674b3bcb-ee95-496e-ac24-4d144685f05b  # implementation-tracking
+references:
+  - ../../docs/strategies/sast-strategy.md   # Phase boundary context
+  - ../../docs/strategies/sarif-strategy.md  # SARIF integration
 issues: []
 ---
 
@@ -48,6 +51,38 @@ Implement comprehensive memory safety analysis for Rust and native code. Use Mir
 
 - Performance optimization
 - Memory profiling for non-Rust code
+- Static unsafe code counting (Phase 16 cargo-geiger)
+
+### Phase Boundary
+
+> **See**: [SAST Strategy](../../docs/strategies/sast-strategy.md) for detailed phase boundaries.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        PHASE 18 RESPONSIBILITIES                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IN SCOPE (Dynamic Memory Analysis)                                          │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ✓ Miri - Undefined behavior detection                                      │
+│  ✓ AddressSanitizer - Buffer overflows, use-after-free                      │
+│  ✓ MemorySanitizer - Uninitialized reads                                    │
+│  ✓ ThreadSanitizer - Data races, deadlocks                                  │
+│  ✓ LeakSanitizer - Memory leaks                                             │
+│  ✓ cargo-careful - Extra runtime checks                                     │
+│  ✓ Valgrind - Native code memory analysis                                   │
+│                                                                              │
+│  OUT OF SCOPE (Other Phases)                                                 │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ✗ cargo-geiger (static unsafe audit) → Phase 16                            │
+│  ✗ clippy unsafe lints → Phase 16                                           │
+│  ✗ Fuzzing input generation → Phase 19                                      │
+│                                                                              │
+│  Analysis Type: DYNAMIC (runtime)                                            │
+│  Execution Frequency: Weekly (scheduled)                                     │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
@@ -155,6 +190,31 @@ jobs:
         run: valgrind --error-exitcode=1 ./target/release/binary
 ```
 
+### 3.4 SARIF Integration
+
+> **See**: [SARIF Strategy](../../docs/strategies/sarif-strategy.md) for aggregation details.
+
+Memory safety findings are reported but not in standard SARIF format. Custom conversion is needed:
+
+```yaml
+# In security-memory-rust.yml
+- name: Convert Miri output to SARIF
+  if: failure()
+  run: |
+    python scripts/miri-to-sarif.py \
+      --input miri-output.txt \
+      --output miri.sarif
+
+- name: Upload Miri SARIF
+  if: failure()
+  uses: actions/upload-artifact@v4
+  with:
+    name: sarif-miri
+    path: miri.sarif
+```
+
+**Note**: Memory safety findings typically indicate critical bugs that should always block.
+
 ---
 
 ## 4. Review & Validation
@@ -163,4 +223,5 @@ jobs:
 - [ ] Sanitizers run without crashes
 - [ ] No false positives in clean code
 - [ ] Clear error reporting
+- [ ] SARIF conversion works for failures
 - [ ] Implementation tracking checklist updated

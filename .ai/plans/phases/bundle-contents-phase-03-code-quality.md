@@ -8,6 +8,8 @@ checklists:
   - 674b3bcb-ee95-496e-ac24-4d144685f05b  # implementation-tracking
 references:
   - linting-strategy-adr  # ADR in ../docs/adr/
+  - ../../docs/strategies/sast-strategy.md   # Phase boundaries
+  - ../../docs/strategies/sarif-strategy.md  # SARIF aggregation
 issues: []
 ---
 
@@ -79,6 +81,47 @@ Establish comprehensive code quality checks using a hybrid approach: pre-commit 
 - Security-specific analysis (Phase 16 SAST)
 - Test execution (Phase 04+)
 - Helm chart linting (Phase 27)
+
+### Phase Boundary with SAST (Phase 16)
+
+> **See**: [SAST Strategy](../../docs/strategies/sast-strategy.md) for detailed phase boundaries.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 03 vs PHASE 16 BOUNDARY                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  PHASE 03: CODE QUALITY (This Phase)                                         │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ✓ clippy::complexity, clippy::style, clippy::perf                          │
+│  ✓ ruff formatting, import sorting, line length                             │
+│  ✓ eslint style rules, prettier formatting                                  │
+│  ✓ golangci-lint style linters                                              │
+│  ✓ Config file validation (TOML, YAML, JSON)                                │
+│  ✓ Spelling, commit messages, actionlint                                    │
+│                                                                              │
+│  PHASE 16: SECURITY SAST (Defer To)                                          │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ✗ clippy::suspicious, clippy::correctness (security implications)          │
+│  ✗ cargo-geiger (unsafe code audit)                                         │
+│  ✗ bandit, gosec (security scanners)                                        │
+│  ✗ eslint-plugin-security                                                   │
+│  ✗ Semgrep security rulesets                                                │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### SARIF Output Strategy
+
+> **See**: [SARIF Strategy](../../docs/strategies/sarif-strategy.md) for aggregation details.
+
+Tools in this phase that support SARIF output:
+- hadolint (Dockerfile linting)
+- clippy (via clippy-sarif converter)
+- shellcheck (via shellcheck-sarif converter)
+- eslint (via @microsoft/eslint-formatter-sarif)
+
+SARIF files from this phase are uploaded as artifacts for aggregation in the unified security pipeline.
 
 ---
 

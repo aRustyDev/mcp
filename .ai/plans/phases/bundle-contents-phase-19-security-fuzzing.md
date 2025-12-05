@@ -6,6 +6,9 @@ depends_on:
   - c8643976-ddd4-4753-b307-b5b4db81b068  # phase-18
 checklists:
   - 674b3bcb-ee95-496e-ac24-4d144685f05b  # implementation-tracking
+references:
+  - ../../docs/strategies/sast-strategy.md   # Phase boundary context
+  - ../../docs/strategies/sarif-strategy.md  # SARIF integration for crash reports
 issues: []
 ---
 
@@ -50,6 +53,47 @@ Implement comprehensive fuzzing for discovering edge cases and security vulnerab
 
 - OSS-Fuzz setup (requires separate process)
 - Long-running fuzzing campaigns
+- Static vulnerability detection (Phase 16, 20)
+
+### Phase Boundary
+
+> **See**: [SAST Strategy](../../docs/strategies/sast-strategy.md) for detailed phase boundaries.
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        PHASE 19 RESPONSIBILITIES                             │
+├─────────────────────────────────────────────────────────────────────────────┤
+│                                                                              │
+│  IN SCOPE (Dynamic Fuzzing)                                                  │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ✓ cargo-fuzz / libFuzzer - Rust parser fuzzing                             │
+│  ✓ AFL++ - Coverage-guided fuzzing                                          │
+│  ✓ Schemathesis - OpenAPI endpoint fuzzing                                  │
+│  ✓ Atheris - Python fuzzing                                                 │
+│  ✓ MCP protocol message fuzzing                                             │
+│  ✓ Corpus management and crash triage                                       │
+│                                                                              │
+│  OUT OF SCOPE (Other Phases)                                                 │
+│  ─────────────────────────────────────────────────────────────────────────  │
+│  ✗ Pattern-based vulnerability detection → Phase 16                         │
+│  ✗ Dataflow/taint analysis → Phase 20                                       │
+│  ✗ Memory safety interpretation → Phase 18 (but crashes feed here)          │
+│                                                                              │
+│  Analysis Type: DYNAMIC (random input generation)                            │
+│  Execution Frequency: Daily (scheduled, continuous for OSS-Fuzz)            │
+│                                                                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Integration with MCP Rules
+
+Fuzzing targets should cover patterns identified in Phase 16 MCP rules:
+
+| MCP Component | Fuzz Target | Related Semgrep Rule |
+|---------------|-------------|----------------------|
+| JSON-RPC Parser | `fuzz_target/json_rpc.rs` | mcp-protocol-validation |
+| Resource URI | `fuzz_target/resource_uri.rs` | mcp-path-traversal |
+| Tool Arguments | `fuzz_target/tool_args.rs` | mcp-command-injection |
 
 ---
 
@@ -181,6 +225,45 @@ jobs:
           # Auto-create issues for new crashes
 ```
 
+### 3.5 SARIF Integration for Crashes
+
+> **See**: [SARIF Strategy](../../docs/strategies/sarif-strategy.md) for aggregation details.
+
+Fuzz crashes are converted to SARIF for unified security reporting:
+
+```yaml
+# In crash-triage.yml
+- name: Convert crashes to SARIF
+  run: |
+    python scripts/fuzz-crashes-to-sarif.py \
+      --crashes-dir fuzz/artifacts/ \
+      --output fuzz-crashes.sarif \
+      --severity critical
+
+- name: Upload crashes SARIF
+  uses: actions/upload-artifact@v4
+  with:
+    name: sarif-fuzz-crashes
+    path: fuzz-crashes.sarif
+```
+
+**Crash SARIF Format**:
+```json
+{
+  "ruleId": "fuzz-crash-parse_json",
+  "level": "error",
+  "message": {
+    "text": "Fuzzer found crash in parse_json target"
+  },
+  "properties": {
+    "crash_input": "base64_encoded_input",
+    "stack_trace": "...",
+    "fuzz_target": "parse_json",
+    "reproducer": "fuzz/artifacts/parse_json/crash-abc123"
+  }
+}
+```
+
 ---
 
 ## 4. Review & Validation
@@ -189,4 +272,5 @@ jobs:
 - [ ] Crashes are captured and triaged
 - [ ] Corpus grows over time
 - [ ] No crashes in stable code
+- [ ] Crash SARIF reports generated
 - [ ] Implementation tracking checklist updated
