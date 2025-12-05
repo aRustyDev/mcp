@@ -75,13 +75,22 @@ The `integration` branch serves as a staging area before production:
 
 ### Ruleset Files
 
-Rulesets are stored as JSON files in `.github/rulesets/`:
+Rulesets are stored as JSON files in `.github/rulesets/`. The rulesets are split into two categories to enable granular bypass permissions:
+
+1. **Core Protection Rulesets** (no bypass): Enforce fundamental branch safety rules
+2. **PR Review Rulesets** (with bypass): Enforce review requirements, allowing designated users to bypass when needed
 
 ```
 .github/rulesets/
-├── main-branch-protection.json
-└── integration-branch-protection.json
+├── main-branch-protection.json      # Core rules: deletion, force-push, linear history
+├── main-pr-reviews.json             # PR review requirements (bypassable)
+├── integration-branch-protection.json  # Core rules: deletion, force-push
+└── integration-pr-reviews.json      # PR review requirements (bypassable)
 ```
+
+#### Why Split Rulesets?
+
+GitHub Rulesets bypass actors work at the **ruleset level**, not at the individual rule level. To allow a user to bypass only the `required_approving_review_count` while still enforcing other rules (like preventing force pushes), the rules must be separated into different rulesets.
 
 ### Justfile Recipes
 
@@ -138,9 +147,11 @@ GitHub Repository Rulesets (introduced 2023) offer advantages over legacy branch
 
 ### Ruleset JSON Schema
 
+**Core Protection Ruleset** (no bypass):
+
 ```json
 {
-  "name": "branch-protection",
+  "name": "main-branch-protection",
   "target": "branch",
   "enforcement": "active",
   "conditions": {
@@ -152,20 +163,61 @@ GitHub Repository Rulesets (introduced 2023) offer advantages over legacy branch
   "rules": [
     { "type": "deletion" },
     { "type": "non_fast_forward" },
+    { "type": "required_linear_history" }
+  ],
+  "bypass_actors": []
+}
+```
+
+**PR Review Ruleset** (with bypass):
+
+```json
+{
+  "name": "main-pr-reviews",
+  "target": "branch",
+  "enforcement": "active",
+  "conditions": {
+    "ref_name": {
+      "include": ["refs/heads/main"],
+      "exclude": []
+    }
+  },
+  "rules": [
     {
       "type": "pull_request",
       "parameters": {
         "required_approving_review_count": 1,
         "dismiss_stale_reviews_on_push": true,
         "require_code_owner_review": false,
-        "require_last_push_approval": false,
-        "required_review_thread_resolution": true
+        "require_last_push_approval": true,
+        "required_review_thread_resolution": true,
+        "allowed_merge_methods": ["merge", "squash", "rebase"]
       }
     }
   ],
-  "bypass_actors": []
+  "bypass_actors": [
+    {
+      "actor_id": 36318507,
+      "actor_type": "User",
+      "bypass_mode": "pull_request"
+    }
+  ]
 }
 ```
+
+### Bypass Actor Configuration
+
+| Property      | Value                                                                             | Description                |
+| ------------- | --------------------------------------------------------------------------------- | -------------------------- |
+| `actor_id`    | User/Team ID                                                                      | Numeric ID from GitHub API |
+| `actor_type`  | `User`, `Team`, `Integration`, `OrganizationAdmin`, `RepositoryRole`, `DeployKey` | Type of actor              |
+| `bypass_mode` | `always`, `pull_request`, `exempt`                                                | When bypass applies        |
+
+**Bypass Modes:**
+
+- `always`: Bypass all rules at all times
+- `pull_request`: Only bypass rules on pull requests (recommended for review bypasses)
+- `exempt`: Rules not run, no audit entry created
 
 ---
 
@@ -231,7 +283,7 @@ git push origin main  # Should be rejected
 
 ## Security Considerations
 
-1. **Bypass Actors**: By default, no bypass actors are configured. Add administrator exceptions only when necessary.
+1. **Bypass Actors**: Bypass actors are configured only on PR review rulesets, allowing designated users to merge without approval while still being subject to core branch protections (no force push, no deletion). The bypass uses `"bypass_mode": "pull_request"` to limit bypass capability to PR merges only.
 
 2. **Enforcement Level**: Use `"enforcement": "active"` for production. Use `"enforcement": "evaluate"` for testing without blocking.
 
