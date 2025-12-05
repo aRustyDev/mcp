@@ -197,8 +197,8 @@ GitHub Repository Rulesets (introduced 2023) offer advantages over legacy branch
   ],
   "bypass_actors": [
     {
-      "actor_id": 36318507,
-      "actor_type": "User",
+      "actor_id": 5,
+      "actor_type": "RepositoryRole",
       "bypass_mode": "pull_request"
     }
   ]
@@ -207,11 +207,20 @@ GitHub Repository Rulesets (introduced 2023) offer advantages over legacy branch
 
 ### Bypass Actor Configuration
 
-| Property      | Value                                                                             | Description                |
-| ------------- | --------------------------------------------------------------------------------- | -------------------------- |
-| `actor_id`    | User/Team ID                                                                      | Numeric ID from GitHub API |
-| `actor_type`  | `User`, `Team`, `Integration`, `OrganizationAdmin`, `RepositoryRole`, `DeployKey` | Type of actor              |
-| `bypass_mode` | `always`, `pull_request`, `exempt`                                                | When bypass applies        |
+| Property      | Value                                                                     | Description                                                       |
+| ------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `actor_id`    | Role/Team/Integration ID                                                  | Numeric ID (see below for role IDs)                               |
+| `actor_type`  | `Integration`, `OrganizationAdmin`, `RepositoryRole`, `Team`, `DeployKey` | Type of actor (Note: `User` is NOT valid for repository rulesets) |
+| `bypass_mode` | `always`, `pull_request`, `exempt`                                        | When bypass applies                                               |
+
+**Repository Role IDs:**
+
+| ID  | Role             | Description                                         |
+| --- | ---------------- | --------------------------------------------------- |
+| 1   | Maintain         | Can manage repo without access to sensitive actions |
+| 2   | Write            | Can push to non-protected branches                  |
+| 3   | Admin            | Full access to the repository                       |
+| 5   | Repository Admin | Owner role for personal repositories                |
 
 **Bypass Modes:**
 
