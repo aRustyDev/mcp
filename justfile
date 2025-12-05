@@ -752,185 +752,95 @@ issues:
 # =============================================================================
 # Repository Protection
 # =============================================================================
+# Recipes for protecting GitHub repository branches using rulesets.
+#
+# Overview:
+#   These recipes use GitHub's Repository Rulesets API to protect branches
+#   from direct pushes, force pushes, and deletion. They enforce a PR-based
+#   workflow for code changes.
+#
+# Available Recipes:
+#   protect-repo <repo>              - Apply all branch protection rulesets
+#   apply-ruleset <repo> <file>      - Apply a single ruleset from JSON file
+#   unprotect-repo <repo>            - Remove all rulesets from a repository
+#   list-rulesets <repo>             - List all rulesets for a repository
+#
+# Ruleset Files:
+#   .github/rulesets/main-branch-protection.json
+#   .github/rulesets/integration-branch-protection.json
+#
+# Branch Protection Strategy:
+#   - 'main' branch: Protected from pushes, force pushes, deletion.
+#                    Requires PRs (typically from 'integration').
+#   - 'integration' branch: Protected from pushes, force pushes, deletion.
+#                           Requires PRs for changes.
+#
+# Usage Examples:
+#   just protect-repo owner/repo
+#   just apply-ruleset owner/repo .github/rulesets/main-branch-protection.json
+#   just list-rulesets owner/repo
+#   just unprotect-repo owner/repo
+#
+# Prerequisites:
+#   - GitHub CLI (gh) authenticated with admin access to the repository
+#   - Repository must exist on GitHub
+#   - Target branches must already exist
+#   - jq installed for JSON processing
+# =============================================================================
 
-# Apply all branch protection rulesets to a repository
-protect-repo repo:
+# Rulesets directory path
+rulesets_dir := justfile_directory() / ".github/rulesets"
+
+# Apply a single ruleset to a repository from a JSON file
+# Creates a new ruleset or updates an existing one with the same name.
+apply-ruleset repo ruleset_file:
     #!/usr/bin/env bash
     set -euo pipefail
-
-    REPO="{{ repo }}"
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    RULESETS_DIR="$SCRIPT_DIR/.github/rulesets"
-
-    echo "╔════════════════════════════════════════════════════════════════════╗"
-    echo "║ Protecting Repository: ${REPO}"
-    echo "╚════════════════════════════════════════════════════════════════════╝"
-    echo ""
-
-    # Check if rulesets directory exists
-    if [[ ! -d "$RULESETS_DIR" ]]; then
-        echo "Error: Rulesets directory not found at $RULESETS_DIR"
-        exit 1
-    fi
-
-    # Ensure integration branch exists
-    echo "→ Ensuring 'integration' branch exists..."
-    if ! gh api "repos/$REPO/branches/integration" &>/dev/null; then
-        echo "  Creating 'integration' branch from 'main'..."
-        DEFAULT_SHA=$(gh api "repos/$REPO/git/ref/heads/main" --jq '.object.sha')
-        gh api "repos/$REPO/git/refs" \
-            -X POST \
-            -f ref="refs/heads/integration" \
-            -f sha="$DEFAULT_SHA" \
-            && echo "  ✓ Created 'integration' branch" \
-            || echo "  ⚠ Could not create 'integration' branch"
+    RULESET_NAME=$(jq -r '.name' "{{ ruleset_file }}")
+    EXISTING_ID=$(gh api "repos/{{ repo }}/rulesets" --jq ".[] | select(.name == \"$RULESET_NAME\") | .id" 2>/dev/null || echo "")
+    if [[ -n "$EXISTING_ID" ]]; then
+        gh api "repos/{{ repo }}/rulesets/$EXISTING_ID" -X PUT --input "{{ ruleset_file }}" \
+            && echo "✓ Updated ruleset: $RULESET_NAME" \
+            || echo "⚠ Failed to update ruleset: $RULESET_NAME"
     else
-        echo "  ✓ 'integration' branch already exists"
+        gh api "repos/{{ repo }}/rulesets" -X POST --input "{{ ruleset_file }}" \
+            && echo "✓ Created ruleset: $RULESET_NAME" \
+            || echo "⚠ Failed to create ruleset: $RULESET_NAME"
     fi
 
-    # Apply each ruleset
-    echo ""
+# Apply all branch protection rulesets to a repository
+protect-repo repo: (_check-rulesets-dir)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "╔════════════════════════════════════════════════════════════════════╗"
+    echo "║ Protecting Repository: {{ repo }}"
+    echo "╚════════════════════════════════════════════════════════════════════╝"
     echo "→ Applying branch protection rulesets..."
-    for ruleset_file in "$RULESETS_DIR"/*.json; do
-        if [[ -f "$ruleset_file" ]]; then
-            RULESET_NAME=$(basename "$ruleset_file" .json)
-            echo "  Applying: $RULESET_NAME"
-            just _apply-ruleset "$REPO" "$ruleset_file"
-        fi
-    done
-
-    echo ""
+    just apply-ruleset "{{ repo }}" "{{ rulesets_dir }}/main-branch-protection.json"
+    just apply-ruleset "{{ repo }}" "{{ rulesets_dir }}/integration-branch-protection.json"
     echo "╔════════════════════════════════════════════════════════════════════╗"
     echo "║ Repository Protection Complete!"
     echo "╚════════════════════════════════════════════════════════════════════╝"
 
-# Apply a single ruleset to a repository (internal)
-_apply-ruleset repo ruleset_file:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    REPO="{{ repo }}"
-    RULESET_FILE="{{ ruleset_file }}"
-    RULESET_NAME=$(jq -r '.name' "$RULESET_FILE")
-
-    # Check if ruleset already exists
-    EXISTING_ID=$(gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$RULESET_NAME\") | .id" 2>/dev/null || echo "")
-
-    if [[ -n "$EXISTING_ID" ]]; then
-        # Update existing ruleset
-        gh api "repos/$REPO/rulesets/$EXISTING_ID" \
-            -X PUT \
-            --input "$RULESET_FILE" \
-            && echo "    ✓ Updated ruleset: $RULESET_NAME" \
-            || echo "    ⚠ Failed to update ruleset: $RULESET_NAME"
-    else
-        # Create new ruleset
-        gh api "repos/$REPO/rulesets" \
-            -X POST \
-            --input "$RULESET_FILE" \
-            && echo "    ✓ Created ruleset: $RULESET_NAME" \
-            || echo "    ⚠ Failed to create ruleset: $RULESET_NAME"
-    fi
-
-# Protect only the main branch
-protect-main repo:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    REPO="{{ repo }}"
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    RULESET_FILE="$SCRIPT_DIR/.github/rulesets/main-branch-protection.json"
-
-    echo "→ Protecting 'main' branch for ${REPO}..."
-
-    if [[ ! -f "$RULESET_FILE" ]]; then
-        echo "Error: Main branch ruleset not found"
-        exit 1
-    fi
-
-    just _apply-ruleset "$REPO" "$RULESET_FILE"
-
-# Protect only the integration branch
-protect-integration repo:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    REPO="{{ repo }}"
-    SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-    RULESET_FILE="$SCRIPT_DIR/.github/rulesets/integration-branch-protection.json"
-
-    echo "→ Protecting 'integration' branch for ${REPO}..."
-
-    # Ensure integration branch exists first
-    if ! gh api "repos/$REPO/branches/integration" &>/dev/null; then
-        echo "  Creating 'integration' branch from 'main'..."
-        DEFAULT_SHA=$(gh api "repos/$REPO/git/ref/heads/main" --jq '.object.sha')
-        gh api "repos/$REPO/git/refs" \
-            -X POST \
-            -f ref="refs/heads/integration" \
-            -f sha="$DEFAULT_SHA" \
-            && echo "  ✓ Created 'integration' branch" \
-            || { echo "  ✗ Could not create 'integration' branch"; exit 1; }
-    fi
-
-    if [[ ! -f "$RULESET_FILE" ]]; then
-        echo "Error: Integration branch ruleset not found"
-        exit 1
-    fi
-
-    just _apply-ruleset "$REPO" "$RULESET_FILE"
-
-# List all rulesets for a repository
-list-rulesets repo:
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    REPO="{{ repo }}"
-
-    echo "Rulesets for ${REPO}:"
-    echo ""
-    gh api "repos/$REPO/rulesets" --jq '.[] | "• \(.name) (ID: \(.id)) - \(.enforcement)"' 2>/dev/null || echo "No rulesets found or insufficient permissions"
-
 # Remove all rulesets from a repository
+# WARNING: This removes ALL branch protections - use with caution!
 unprotect-repo repo:
     #!/usr/bin/env bash
     set -euo pipefail
-
-    REPO="{{ repo }}"
-
-    echo "⚠ Removing all rulesets from ${REPO}..."
-    echo ""
-
-    RULESET_IDS=$(gh api "repos/$REPO/rulesets" --jq '.[].id' 2>/dev/null || echo "")
-
-    if [[ -z "$RULESET_IDS" ]]; then
-        echo "No rulesets found"
-        exit 0
-    fi
-
-    for id in $RULESET_IDS; do
-        NAME=$(gh api "repos/$REPO/rulesets/$id" --jq '.name' 2>/dev/null || echo "unknown")
-        gh api "repos/$REPO/rulesets/$id" -X DELETE \
+    echo "⚠ Removing all rulesets from {{ repo }}..."
+    for id in $(gh api "repos/{{ repo }}/rulesets" --jq '.[].id' 2>/dev/null); do
+        NAME=$(gh api "repos/{{ repo }}/rulesets/$id" --jq '.name' 2>/dev/null || echo "unknown")
+        gh api "repos/{{ repo }}/rulesets/$id" -X DELETE \
             && echo "✓ Removed ruleset: $NAME (ID: $id)" \
             || echo "⚠ Failed to remove ruleset: $NAME (ID: $id)"
     done
-
-    echo ""
     echo "✓ All rulesets removed"
 
-# Show ruleset details for a repository
-show-ruleset repo name:
-    #!/usr/bin/env bash
-    set -euo pipefail
+# List all rulesets for a repository
+list-rulesets repo:
+    @gh api "repos/{{ repo }}/rulesets" --jq '.[] | "• \(.name) (ID: \(.id)) - \(.enforcement)"' 2>/dev/null || echo "No rulesets found or insufficient permissions"
 
-    REPO="{{ repo }}"
-    NAME="{{ name }}"
-
-    RULESET_ID=$(gh api "repos/$REPO/rulesets" --jq ".[] | select(.name == \"$NAME\") | .id" 2>/dev/null || echo "")
-
-    if [[ -z "$RULESET_ID" ]]; then
-        echo "Ruleset '$NAME' not found in $REPO"
-        exit 1
-    fi
-
-    gh api "repos/$REPO/rulesets/$RULESET_ID" | jq .
+# Internal: Check that rulesets directory exists
+[private]
+_check-rulesets-dir:
+    {{ if path_exists(rulesets_dir) == "false" { error("Rulesets directory not found: " + rulesets_dir) } else { "" } }}
