@@ -20,7 +20,7 @@ project_number := env("MCP_PROJECT_NUMBER", "")
 project_url := "https://github.com/orgs/" + github_org + "/projects/" + project_number
 
 # Target repository - set via 'just init' or override per-command
-target_repo := "aRustyDev/mcp"
+target_repo := ""
 
 # Paths
 justfile_dir := justfile_directory()
