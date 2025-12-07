@@ -9,6 +9,8 @@ feat | ✨ Features | minor |
 | release
 
 - wip|🚧|👷(<scope>): Work in progress
+- planning|📝|📝(<scope>): Planning tasks
+  - "Planning tasks and strategies"
 - chore|🧹(<scope>): Maintenance tasks, dependencies
   - cleanup/trivial changes, syntax fixes, etc.
   - "Maintenance work and dependency updates"
